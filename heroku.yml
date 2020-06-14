@@ -4,4 +4,4 @@ setup:
       as: PAPERTRAIL
 build:
   docker:
-    web: Dockerfile
+    web: heroku/Dockerfile
