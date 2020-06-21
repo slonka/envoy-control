@@ -83,7 +83,7 @@ COPY --from=consul /bin/consul /bin/consul
 RUN apk --no-cache add openjdk11 curl --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
 RUN mkdir /tmp/envoy-control-dist /tmp/envoy-control /bin/envoy-control /etc/envoy-control
 COPY --from=build /home/gradle/src/envoy-control-runner/build/distributions/ /tmp/envoy-control-dist
-COPY ./envoy-control-runner/src/main/resources/application.yaml /etc/envoy-control/
+COPY ./heroku/application.yaml /etc/envoy-control/
 COPY heroku/register-echo1.json /etc/envoy-control/
 COPY heroku/register-echo2.json /etc/envoy-control/
 RUN tar -xf /tmp/envoy-control-dist/envoy-control-runner*.tar -C /tmp/envoy-control

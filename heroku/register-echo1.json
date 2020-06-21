@@ -5,11 +5,6 @@
       "primary"
    ],
    "Address":"127.0.0.1",
-   "Port":10010,
-   "Check":{
-      "DeregisterCriticalServiceAfter":"90m",
-      "http":"http://127.0.0.1:10010",
-      "Interval":"10s"
-   }
+   "Port":10010
 }
 
