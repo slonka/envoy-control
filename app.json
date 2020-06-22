@@ -1,0 +1,11 @@
+{
+   "addons": [
+      {
+         "plan": "papertrail:choklad"
+      },
+      {
+         "plan": "logentries:le_tryit"
+      }
+   ],
+   "stack": "container"
+}
