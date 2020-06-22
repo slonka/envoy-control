@@ -1,7 +1,7 @@
 setup:
   addons:
     - plan: 'papertrail:choklad'
-      as: PAPERTRAIL
+    - plan: 'logentries:le_tryit'
 build:
   docker:
     web: Dockerfile

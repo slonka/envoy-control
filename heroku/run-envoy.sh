@@ -1,6 +1,10 @@
 #!/usr/bin/dumb-init /bin/sh
 set -e
 
+function prepend() {
+  while read line; do echo "${1}${line}"; done;
+}
+
 function wait_for_port() {
   while ! nc -z localhost $1; do
     sleep 1 # every 1 second
@@ -21,12 +25,12 @@ if [ ! -z "${ENVOY_CONTROL_PROPERTIES}" ]; then
     START_ARGUMENTS="$START_ARGUMENTS $ENVOY_CONTROL_PROPERTIES"
 fi
 echo "Launching Envoy-control with $START_ARGUMENTS"
-wait_for_port 8500 && /bin/envoy-control/envoy-control-runner/bin/envoy-control-runner $START_ARGUMENTS &
+wait_for_port 8500 && /bin/envoy-control/envoy-control-runner/bin/envoy-control-runner $START_ARGUMENTS | prepend "ec1: " &
 
 # start envoys
 wait_for_port 8080 && \
- /usr/local/bin/envoy --base-id 1 -c /etc/envoy1.yaml & \
- /usr/local/bin/envoy --base-id 2 -c /etc/envoy2.yaml &
+ ( /usr/local/bin/envoy --base-id 1 --log-path /dev/stdout -c /etc/envoy1.yaml | prepend "envoy1: ") & \
+ ( /usr/local/bin/envoy --base-id 2 --log-path /dev/stdout -c /etc/envoy2.yaml | prepend "envoy2: ") &
 
 # run consul
 consul agent -server -ui -ui-content-path "/consul/ui" -dev -client 0.0.0.0 &
