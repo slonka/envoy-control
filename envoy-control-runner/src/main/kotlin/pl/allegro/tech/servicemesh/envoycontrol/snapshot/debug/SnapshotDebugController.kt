@@ -38,7 +38,7 @@ import pl.allegro.tech.servicemesh.envoycontrol.snapshot.SnapshotUpdater
 
 @RestController
 class SnapshotDebugController(controlPlane: ControlPlane) {
-    val cache: SnapshotCache<Group> = controlPlane.cache
+    val cache: SnapshotCache<Group, io.envoyproxy.controlplane.cache.Snapshot> = controlPlane.cache
     val nodeGroup: NodeGroup<Group> = controlPlane.nodeGroup
     val snapshotUpdater: SnapshotUpdater = controlPlane.snapshotUpdater
 

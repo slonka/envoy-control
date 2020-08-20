@@ -28,8 +28,12 @@ class CompositeDiscoveryServerCallbacks(
         runCallbacks { it.onStreamOpen(streamId, typeUrl) }
     }
 
-    override fun onStreamRequest(streamId: Long, request: DiscoveryRequest?) {
-        runCallbacks { it.onStreamRequest(streamId, request) }
+    override fun onV2StreamRequest(streamId: Long, request: DiscoveryRequest?) {
+        runCallbacks { it.onV2StreamRequest(streamId, request) }
+    }
+
+    override fun onV3StreamRequest(streamId: Long, request: io.envoyproxy.envoy.service.discovery.v3.DiscoveryRequest?) {
+        runCallbacks { it.onV3StreamRequest(streamId, request) }
     }
 
     override fun onStreamResponse(

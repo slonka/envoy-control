@@ -33,8 +33,12 @@ class NodeMetadataValidator(
 
     override fun onStreamOpen(streamId: Long, typeUrl: String?) {}
 
-    override fun onStreamRequest(streamId: Long, request: DiscoveryRequest?) {
-        request?.node?.let { validateMetadata(it) }
+    override fun onV3StreamRequest(streamId: Long, request: io.envoyproxy.envoy.service.discovery.v3.DiscoveryRequest?) {
+        request?.node?.let { validateV3Metadata(it) }
+    }
+
+    override fun onV2StreamRequest(streamId: Long, request: DiscoveryRequest?) {
+        request?.node?.let { validateV2Metadata(it) }
     }
 
     override fun onStreamResponse(
@@ -44,11 +48,23 @@ class NodeMetadataValidator(
     ) {
     }
 
-    private fun validateMetadata(node: Node) {
+    private fun validateV3Metadata(node: io.envoyproxy.envoy.config.core.v3.Node) {
         // Some validation logic is executed when NodeMetadata is created.
         // This may throw NodeMetadataValidationException
         val metadata = NodeMetadata(node.metadata, properties)
 
+        validateMetadata(metadata)
+    }
+
+    private fun validateV2Metadata(node: Node) {
+        // Some validation logic is executed when NodeMetadata is created.
+        // This may throw NodeMetadataValidationException
+        val metadata = NodeMetadata(node.metadata, properties)
+
+        validateMetadata(metadata)
+    }
+
+    private fun validateMetadata(metadata: NodeMetadata) {
         validateDependencies(metadata)
         validateConfigurationMode(metadata)
     }

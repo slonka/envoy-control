@@ -1,10 +1,12 @@
 package pl.allegro.tech.servicemesh.envoycontrol
 
 import io.envoyproxy.controlplane.cache.NodeGroup
+import io.envoyproxy.controlplane.cache.Snapshot
 import io.envoyproxy.controlplane.cache.SnapshotCache
 import io.envoyproxy.controlplane.server.DefaultExecutorGroup
 import io.envoyproxy.controlplane.server.DiscoveryServer
 import io.envoyproxy.controlplane.server.ExecutorGroup
+import io.envoyproxy.controlplane.server.V2DiscoveryServer
 import io.envoyproxy.controlplane.server.callback.SnapshotCollectingCallback
 import io.grpc.Server
 import io.grpc.netty.NettyServerBuilder
@@ -50,7 +52,7 @@ class ControlPlane private constructor(
     val grpcServer: Server,
     val snapshotUpdater: SnapshotUpdater,
     val nodeGroup: NodeGroup<Group>,
-    val cache: SnapshotCache<Group>,
+    val cache: SnapshotCache<Group, Snapshot>,
     private val changes: Flux<MultiClusterState>
 ) : AutoCloseable {
 
@@ -154,13 +156,13 @@ class ControlPlane private constructor(
                 )
             }
 
-            val cache = SimpleCache(nodeGroup, properties.envoy.snapshot.shouldSendMissingEndpoints)
+            val cache = SimpleCache<Group, Snapshot>(nodeGroup, properties.envoy.snapshot.shouldSendMissingEndpoints)
 
             val cleanupProperties = properties.server.snapshotCleanup
 
             val groupChangeWatcher = GroupChangeWatcher(cache, metrics, meterRegistry)
 
-            val discoveryServer = DiscoveryServer(
+            val discoveryServer = V2DiscoveryServer(
                 listOf(
                     CompositeDiscoveryServerCallbacks(
                         meterRegistry,
@@ -211,14 +213,13 @@ class ControlPlane private constructor(
             return ControlPlane(
                 grpcServer(properties.server, discoveryServer, nioEventLoopExecutor!!, grpcServerExecutor!!),
                 SnapshotUpdater(
-                    cache,
-                    properties.envoy.snapshot,
-                    envoySnapshotFactory,
-                    Schedulers.fromExecutor(globalSnapshotExecutor!!),
-                    groupSnapshotScheduler,
-                    groupChangeWatcher.onGroupAdded(),
-                    meterRegistry,
-                    envoyHttpFilters
+                        cache,
+                        properties.envoy.snapshot,
+                        envoySnapshotFactory,
+                        Schedulers.fromExecutor(globalSnapshotExecutor!!),
+                        groupSnapshotScheduler,
+                        groupChangeWatcher.onGroupAdded(),
+                        meterRegistry
                 ),
                 nodeGroup,
                 cache,
@@ -266,7 +267,7 @@ class ControlPlane private constructor(
             return this
         }
 
-        private fun NettyServerBuilder.withEnvoyServices(discoveryServer: DiscoveryServer): NettyServerBuilder =
+        private fun NettyServerBuilder.withEnvoyServices(discoveryServer: V2DiscoveryServer): NettyServerBuilder =
             this.addService(discoveryServer.aggregatedDiscoveryServiceImpl)
                 .addService(discoveryServer.clusterDiscoveryServiceImpl)
                 .addService(discoveryServer.endpointDiscoveryServiceImpl)
@@ -280,7 +281,7 @@ class ControlPlane private constructor(
 
         private fun grpcServer(
             config: ServerProperties,
-            discoveryServer: DiscoveryServer,
+            discoveryServer: V2DiscoveryServer,
             nioEventLoopExecutor: Executor,
             grpcServerExecutor: Executor
         ): Server = NettyServerBuilder.forPort(config.port)

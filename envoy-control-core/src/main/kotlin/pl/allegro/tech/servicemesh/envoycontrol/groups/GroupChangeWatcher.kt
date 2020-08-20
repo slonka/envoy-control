@@ -2,8 +2,9 @@ package pl.allegro.tech.servicemesh.envoycontrol.groups
 
 import io.envoyproxy.controlplane.cache.ConfigWatcher
 import io.envoyproxy.controlplane.cache.Response
+import io.envoyproxy.controlplane.cache.Snapshot
 import io.envoyproxy.controlplane.cache.Watch
-import io.envoyproxy.envoy.api.v2.DiscoveryRequest
+import io.envoyproxy.controlplane.cache.XdsRequest
 import io.micrometer.core.instrument.MeterRegistry
 import pl.allegro.tech.servicemesh.envoycontrol.EnvoyControlMetrics
 import pl.allegro.tech.servicemesh.envoycontrol.SimpleCache
@@ -20,7 +21,7 @@ import java.util.function.Consumer
  * When Envoy doesn't receive any snapshot from Envoy Control, it is stuck in PRE_INITIALIZING state.
  */
 internal class GroupChangeWatcher(
-    private val cache: SimpleCache<Group>,
+    private val cache: SimpleCache<Group, Snapshot>,
     private val metrics: EnvoyControlMetrics,
     private val meterRegistry: MeterRegistry
 ) : ConfigWatcher {
@@ -40,12 +41,12 @@ internal class GroupChangeWatcher(
     }
 
     override fun createWatch(
-        ads: Boolean,
-        request: DiscoveryRequest,
-        knownResourceNames: MutableSet<String>,
-        responseConsumer: Consumer<Response>,
-        hasClusterChanged: Boolean
-    ): Watch {
+            ads: Boolean,
+            request: XdsRequest?,
+            knownResourceNames: MutableSet<String>?,
+            responseConsumer: Consumer<Response>?,
+            hasClusterChanged: Boolean
+    ): Watch? {
         val oldGroups = cache.groups()
         val watch = cache.createWatch(ads, request, knownResourceNames, responseConsumer, hasClusterChanged)
         val groups = cache.groups()

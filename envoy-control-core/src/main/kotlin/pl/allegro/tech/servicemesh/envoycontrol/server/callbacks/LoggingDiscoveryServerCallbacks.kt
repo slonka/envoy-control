@@ -15,6 +15,10 @@ class LoggingDiscoveryServerCallbacks(
         logger.debug("onStreamClose streamId: {} typeUrl: {}", streamId, typeUrl)
     }
 
+    override fun onV3StreamRequest(streamId: Long, request: io.envoyproxy.envoy.service.discovery.v3.DiscoveryRequest?) {
+        logger.debug("onV3StreamRequest streamId: {} request: {}", streamId, requestData(request))
+    }
+
     override fun onStreamCloseWithError(streamId: Long, typeUrl: String?, error: Throwable?) {
         logger.debug("onStreamCloseWithError streamId: {}, typeUrl: {}", streamId, typeUrl, error)
     }
@@ -23,8 +27,8 @@ class LoggingDiscoveryServerCallbacks(
         logger.debug("onStreamOpen streamId: {}, typeUrl: {}", streamId, typeUrl)
     }
 
-    override fun onStreamRequest(streamId: Long, request: DiscoveryRequest?) {
-        logger.debug("onStreamRequest streamId: {} request: {}", streamId, requestData(request))
+    override fun onV2StreamRequest(streamId: Long, request: DiscoveryRequest?) {
+        logger.debug("onV2StreamRequest streamId: {} request: {}", streamId, requestData(request))
     }
 
     override fun onStreamResponse(
@@ -54,6 +58,15 @@ class LoggingDiscoveryServerCallbacks(
         } else {
             "version: ${request?.versionInfo}, id: ${request?.node?.id}, cluster: ${request?.node?.cluster}, " +
                 "type: ${request?.typeUrl}, responseNonce: ${request?.responseNonce}"
+        }
+    }
+
+    private fun requestData(request: io.envoyproxy.envoy.service.discovery.v3.DiscoveryRequest?): String {
+        return if (logFullRequest) {
+            "$request"
+        } else {
+            "version: ${request?.versionInfo}, id: ${request?.node?.id}, cluster: ${request?.node?.cluster}, " +
+                    "type: ${request?.typeUrl}, responseNonce: ${request?.responseNonce}"
         }
     }
 }
