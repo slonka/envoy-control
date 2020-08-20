@@ -3,6 +3,7 @@ package pl.allegro.tech.servicemesh.envoycontrol.server.callbacks
 import io.envoyproxy.controlplane.cache.Resources
 import io.envoyproxy.controlplane.server.DiscoveryServerCallbacks
 import io.envoyproxy.envoy.api.v2.DiscoveryRequest
+import io.envoyproxy.envoy.service.discovery.v3.DiscoveryRequest as v3DiscoveryRequest
 import java.util.concurrent.atomic.AtomicInteger
 
 class MeteredConnectionsCallbacks(
@@ -31,7 +32,7 @@ class MeteredConnectionsCallbacks(
         connectionsByType(typeUrl).decrementAndGet()
     }
 
-    override fun onV3StreamRequest(streamId: Long, request: io.envoyproxy.envoy.service.discovery.v3.DiscoveryRequest?) {
+    override fun onV3StreamRequest(streamId: Long, request: v3DiscoveryRequest?) {
     }
 
     override fun onV2StreamRequest(p0: Long, p1: DiscoveryRequest?) {

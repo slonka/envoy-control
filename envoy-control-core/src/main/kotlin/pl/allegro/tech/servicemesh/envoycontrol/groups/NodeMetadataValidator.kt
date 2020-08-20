@@ -2,6 +2,7 @@ package pl.allegro.tech.servicemesh.envoycontrol.groups
 
 import io.envoyproxy.controlplane.server.DiscoveryServerCallbacks
 import io.envoyproxy.envoy.api.v2.DiscoveryRequest
+import io.envoyproxy.envoy.service.discovery.v3.DiscoveryRequest as v3DiscoveryRequest
 import io.envoyproxy.envoy.api.v2.DiscoveryResponse
 import io.envoyproxy.envoy.api.v2.core.Node
 import pl.allegro.tech.servicemesh.envoycontrol.protocol.HttpMethod
@@ -33,7 +34,7 @@ class NodeMetadataValidator(
 
     override fun onStreamOpen(streamId: Long, typeUrl: String?) {}
 
-    override fun onV3StreamRequest(streamId: Long, request: io.envoyproxy.envoy.service.discovery.v3.DiscoveryRequest?) {
+    override fun onV3StreamRequest(streamId: Long, request: v3DiscoveryRequest?) {
         request?.node?.let { validateV3Metadata(it) }
     }
 

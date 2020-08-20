@@ -4,7 +4,9 @@ package pl.allegro.tech.servicemesh.envoycontrol.snapshot
 
 import io.envoyproxy.envoy.api.v2.Cluster
 import io.envoyproxy.envoy.api.v2.auth.TlsParameters
+import io.envoyproxy.envoy.config.cluster.v3.Cluster as ClusterV3
 import pl.allegro.tech.servicemesh.envoycontrol.groups.PathMatchingType
+import io.envoyproxy.envoy.extensions.transport_sockets.tls.v3.TlsParameters as TlsParametersV3
 import java.time.Duration
 
 class SnapshotProperties {
@@ -89,6 +91,8 @@ class TlsProtocolProperties {
     var cipherSuites: List<String> = listOf("ECDHE-ECDSA-AES128-GCM-SHA256", "ECDHE-RSA-AES128-GCM-SHA256")
     var minimumVersion = TlsParameters.TlsProtocol.TLSv1_2
     var maximumVersion = TlsParameters.TlsProtocol.TLSv1_2
+    var minimumVersionV3 = TlsParametersV3.TlsProtocol.TLSv1_2
+    var maximumVersionV3 = TlsParametersV3.TlsProtocol.TLSv1_2
 }
 
 class SourceIpAuthenticationProperties {
@@ -105,6 +109,7 @@ class LoadBalancingProperties {
     var regularMetadataKey = "lb_regular"
     var weights = LoadBalancingWeightsProperties()
     var policy = Cluster.LbPolicy.LEAST_REQUEST
+    var policyV3 = ClusterV3.LbPolicy.LEAST_REQUEST
     var useKeysSubsetFallbackPolicy = true
 }
 

@@ -18,29 +18,33 @@ import pl.allegro.tech.servicemesh.envoycontrol.groups.ServicesGroup
 import pl.allegro.tech.servicemesh.envoycontrol.services.MultiClusterState
 import pl.allegro.tech.servicemesh.envoycontrol.services.ServiceInstance
 import pl.allegro.tech.servicemesh.envoycontrol.services.ServiceInstances
-import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.clusters.EnvoyClustersFactory
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.clusters.v2.EnvoyClustersFactory
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.clusters.v3.EnvoyClustersFactory as EnvoyClustersFactoryV3
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.EnvoyEgressRoutesFactory
-import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.endpoints.EnvoyEndpointsFactory
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.endpoints.v2.EnvoyEndpointsFactory
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.endpoints.v3.EnvoyEndpointsFactory as EnvoyEndpointsFactoryV3
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.EnvoyIngressRoutesFactory
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.EnvoyListenersFactory
 
 class EnvoySnapshotFactory(
-    private val ingressRoutesFactory: EnvoyIngressRoutesFactory,
-    private val egressRoutesFactory: EnvoyEgressRoutesFactory,
-    private val clustersFactory: EnvoyClustersFactory,
-    private val endpointsFactory: EnvoyEndpointsFactory,
-    private val listenersFactory: EnvoyListenersFactory,
-    private val snapshotsVersions: SnapshotsVersions,
-    private val properties: SnapshotProperties,
-    private val defaultDependencySettings: DependencySettings =
-        DependencySettings(
-            handleInternalRedirect = properties.egress.handleInternalRedirect,
-            timeoutPolicy = Outgoing.TimeoutPolicy(
-                idleTimeout = Durations.fromMillis(properties.egress.commonHttp.idleTimeout.toMillis()),
-                requestTimeout = Durations.fromMillis(properties.egress.commonHttp.requestTimeout.toMillis())
-            )
-        ),
-    private val meterRegistry: MeterRegistry
+        private val ingressRoutesFactory: EnvoyIngressRoutesFactory,
+        private val egressRoutesFactory: EnvoyEgressRoutesFactory,
+        private val clustersFactory: EnvoyClustersFactory,
+        private val endpointsFactory: EnvoyEndpointsFactory,
+        private val listenersFactory: EnvoyListenersFactory,
+        private val snapshotsVersions: SnapshotsVersions,
+        private val properties: SnapshotProperties,
+        private val defaultDependencySettings: DependencySettings =
+                DependencySettings(
+                        handleInternalRedirect = properties.egress.handleInternalRedirect,
+                        timeoutPolicy = Outgoing.TimeoutPolicy(
+                                idleTimeout = Durations.fromMillis(properties.egress.commonHttp.idleTimeout.toMillis()),
+                                requestTimeout = Durations.fromMillis(properties.egress.commonHttp.requestTimeout.toMillis())
+                        )
+                ),
+        private val meterRegistry: MeterRegistry,
+        private val clustersFactoryV3: EnvoyClustersFactoryV3,
+        private val endpointsFactoryV3: EnvoyEndpointsFactoryV3
 ) {
     fun newSnapshot(
         servicesStates: MultiClusterState,
@@ -50,18 +54,27 @@ class EnvoySnapshotFactory(
         val sample = Timer.start(meterRegistry)
 
         val clusters = clustersFactory.getClustersForServices(clusterConfigurations.values, communicationMode)
+        val clustersV3 = clustersFactoryV3.getClustersForServices(clusterConfigurations.values, communicationMode)
         val securedClusters = clustersFactory.getSecuredClusters(clusters)
+        val securedClustersV3 = clustersFactoryV3.getSecuredClusters(clustersV3)
 
-        val endpoints: List<ClusterLoadAssignment> = endpointsFactory.createLoadAssignment(
+        val endpoints = endpointsFactory.createLoadAssignment(
             clusters = clusterConfigurations.keys,
             multiClusterState = servicesStates
+        )
+        val endpointsV3 = endpointsFactoryV3.createLoadAssignment(
+                clusters = clusterConfigurations.keys,
+                multiClusterState = servicesStates
         )
 
         val snapshot = globalSnapshot(
             clusterConfigurations = clusterConfigurations,
             clusters = clusters,
+            clustersV3 = clustersV3,
             securedClusters = securedClusters,
+            securedClustersV3 = securedClustersV3,
             endpoints = endpoints,
+            endpointsV3 = endpointsV3,
             properties = properties.outgoingPermissions
         )
         sample.stop(meterRegistry.timer("snapshot-factory.new-snapshot.time"))

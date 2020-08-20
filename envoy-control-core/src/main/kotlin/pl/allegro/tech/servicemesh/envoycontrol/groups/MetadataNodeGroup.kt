@@ -182,7 +182,6 @@ class MetadataNodeGroup(
     companion object {
         private const val MAX_PORT_VALUE = 65535
     }
-
 }
 
 data class ListenersHostPortConfig(

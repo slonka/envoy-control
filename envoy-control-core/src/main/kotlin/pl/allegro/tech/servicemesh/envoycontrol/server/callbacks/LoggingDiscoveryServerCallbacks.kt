@@ -2,6 +2,7 @@ package pl.allegro.tech.servicemesh.envoycontrol.server.callbacks
 
 import io.envoyproxy.controlplane.server.DiscoveryServerCallbacks
 import io.envoyproxy.envoy.api.v2.DiscoveryRequest
+import io.envoyproxy.envoy.service.discovery.v3.DiscoveryRequest as v3DiscoveryRequest
 import io.envoyproxy.envoy.api.v2.DiscoveryResponse
 import org.slf4j.LoggerFactory
 
@@ -15,7 +16,7 @@ class LoggingDiscoveryServerCallbacks(
         logger.debug("onStreamClose streamId: {} typeUrl: {}", streamId, typeUrl)
     }
 
-    override fun onV3StreamRequest(streamId: Long, request: io.envoyproxy.envoy.service.discovery.v3.DiscoveryRequest?) {
+    override fun onV3StreamRequest(streamId: Long, request: v3DiscoveryRequest?) {
         logger.debug("onV3StreamRequest streamId: {} request: {}", streamId, requestData(request))
     }
 

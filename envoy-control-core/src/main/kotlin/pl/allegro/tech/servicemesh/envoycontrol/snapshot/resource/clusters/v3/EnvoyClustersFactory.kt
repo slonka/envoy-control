@@ -1,35 +1,35 @@
-package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.clusters
+package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.clusters.v3
 
 import com.google.protobuf.Any
 import com.google.protobuf.Struct
 import com.google.protobuf.UInt32Value
 import com.google.protobuf.Value
 import com.google.protobuf.util.Durations
-import io.envoyproxy.envoy.api.v2.Cluster
-import io.envoyproxy.envoy.api.v2.ClusterLoadAssignment
-import io.envoyproxy.envoy.api.v2.auth.CertificateValidationContext
-import io.envoyproxy.envoy.api.v2.auth.CommonTlsContext
-import io.envoyproxy.envoy.api.v2.auth.SdsSecretConfig
-import io.envoyproxy.envoy.api.v2.auth.TlsParameters
-import io.envoyproxy.envoy.api.v2.auth.UpstreamTlsContext
-import io.envoyproxy.envoy.api.v2.cluster.CircuitBreakers
-import io.envoyproxy.envoy.api.v2.cluster.OutlierDetection
-import io.envoyproxy.envoy.api.v2.core.Address
-import io.envoyproxy.envoy.api.v2.core.AggregatedConfigSource
-import io.envoyproxy.envoy.api.v2.core.ApiConfigSource
-import io.envoyproxy.envoy.api.v2.core.ConfigSource
-import io.envoyproxy.envoy.api.v2.core.DataSource
-import io.envoyproxy.envoy.api.v2.core.GrpcService
-import io.envoyproxy.envoy.api.v2.core.Http2ProtocolOptions
-import io.envoyproxy.envoy.api.v2.core.HttpProtocolOptions
-import io.envoyproxy.envoy.api.v2.core.RoutingPriority
-import io.envoyproxy.envoy.api.v2.core.SocketAddress
-import io.envoyproxy.envoy.api.v2.core.TransportSocket
-import io.envoyproxy.envoy.api.v2.core.UpstreamHttpProtocolOptions
-import io.envoyproxy.envoy.api.v2.endpoint.Endpoint
-import io.envoyproxy.envoy.api.v2.endpoint.LbEndpoint
-import io.envoyproxy.envoy.api.v2.endpoint.LocalityLbEndpoints
-import io.envoyproxy.envoy.type.matcher.StringMatcher
+import io.envoyproxy.envoy.config.cluster.v3.CircuitBreakers
+import io.envoyproxy.envoy.config.cluster.v3.Cluster
+import io.envoyproxy.envoy.config.cluster.v3.OutlierDetection
+import io.envoyproxy.envoy.config.core.v3.Address
+import io.envoyproxy.envoy.config.core.v3.AggregatedConfigSource
+import io.envoyproxy.envoy.config.core.v3.ApiConfigSource
+import io.envoyproxy.envoy.config.core.v3.ConfigSource
+import io.envoyproxy.envoy.config.core.v3.DataSource
+import io.envoyproxy.envoy.config.core.v3.GrpcService
+import io.envoyproxy.envoy.config.core.v3.Http2ProtocolOptions
+import io.envoyproxy.envoy.config.core.v3.HttpProtocolOptions
+import io.envoyproxy.envoy.config.core.v3.RoutingPriority
+import io.envoyproxy.envoy.config.core.v3.SocketAddress
+import io.envoyproxy.envoy.config.core.v3.TransportSocket
+import io.envoyproxy.envoy.config.core.v3.UpstreamHttpProtocolOptions
+import io.envoyproxy.envoy.config.endpoint.v3.ClusterLoadAssignment
+import io.envoyproxy.envoy.config.endpoint.v3.Endpoint
+import io.envoyproxy.envoy.config.endpoint.v3.LbEndpoint
+import io.envoyproxy.envoy.config.endpoint.v3.LocalityLbEndpoints
+import io.envoyproxy.envoy.extensions.transport_sockets.tls.v3.CertificateValidationContext
+import io.envoyproxy.envoy.extensions.transport_sockets.tls.v3.CommonTlsContext
+import io.envoyproxy.envoy.extensions.transport_sockets.tls.v3.SdsSecretConfig
+import io.envoyproxy.envoy.extensions.transport_sockets.tls.v3.TlsParameters
+import io.envoyproxy.envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+import io.envoyproxy.envoy.type.matcher.v3.StringMatcher
 import pl.allegro.tech.servicemesh.envoycontrol.groups.AllServicesGroup
 import pl.allegro.tech.servicemesh.envoycontrol.groups.CommunicationMode
 import pl.allegro.tech.servicemesh.envoycontrol.groups.CommunicationMode.ADS
@@ -93,9 +93,9 @@ class EnvoyClustersFactory(
 
     private fun getEdsClustersForGroup(group: Group, globalSnapshot: GlobalSnapshot): List<Cluster> {
         val clusters = if (enableTlsForGroup(group)) {
-            globalSnapshot.securedClusters.resources()
+            globalSnapshot.securedClustersV3.resources()
         } else {
-            globalSnapshot.clusters.resources()
+            globalSnapshot.clustersV3.resources()
         }
 
         return when (group) {
@@ -113,8 +113,8 @@ class EnvoyClustersFactory(
     }
 
     private val commonTlsParams = TlsParameters.newBuilder()
-            .setTlsMinimumProtocolVersion(tlsProperties.protocol.minimumVersion)
-            .setTlsMaximumProtocolVersion(tlsProperties.protocol.maximumVersion)
+            .setTlsMinimumProtocolVersion(tlsProperties.protocol.minimumVersionV3)
+            .setTlsMaximumProtocolVersion(tlsProperties.protocol.maximumVersionV3)
             .addAllCipherSuites(tlsProperties.protocol.cipherSuites)
             .build()
 
@@ -180,7 +180,7 @@ class EnvoyClustersFactory(
                     )
                 )
             )
-            .setLbPolicy(properties.loadBalancing.policy)
+            .setLbPolicy(properties.loadBalancing.policyV3)
 
         if (ssl) {
             val commonTlsContext = CommonTlsContext.newBuilder()
@@ -244,7 +244,7 @@ class EnvoyClustersFactory(
                     }
                 ).setServiceName(clusterConfiguration.serviceName)
             )
-            .setLbPolicy(properties.loadBalancing.policy)
+            .setLbPolicy(properties.loadBalancing.policyV3)
             .configureLbSubsets()
 
         cluster.setCommonHttpProtocolOptions(httpProtocolOptions)

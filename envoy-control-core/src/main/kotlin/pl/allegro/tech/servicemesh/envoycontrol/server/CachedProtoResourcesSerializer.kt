@@ -28,10 +28,12 @@ internal class CachedProtoResourcesSerializer(
         }
     }
 
-    private val cacheV2: Cache<Collection<Message>, MutableCollection<Any>> = createCache(reportMetrics, meterRegistry, "protobuf-cache-v2")
-    private val cacheV3: Cache<Collection<Message>, MutableCollection<Any>> = createCache(reportMetrics, meterRegistry, "protobuf-cache-v3")
+    private val cacheV2: Cache<Collection<Message>, MutableCollection<Any>> = createCache("protobuf-cache-v2")
+    private val cacheV3: Cache<Collection<Message>, MutableCollection<Any>> = createCache("protobuf-cache-v3")
+    private val v2Timer = createTimer(reportMetrics, meterRegistry, "protobuf-cache-v2.serialize.time")
+    private val v3Timer = createTimer(reportMetrics, meterRegistry, "protobuf-cache-v3.serialize.time")
 
-    private fun createCache(reportMetrics: Boolean, meterRegistry: MeterRegistry, cacheName: String): Cache<Collection<Message>, MutableCollection<Any>> {
+    private fun createCache(cacheName: String): Cache<Collection<Message>, MutableCollection<Any>> {
         return if (reportMetrics) {
             GuavaCacheMetrics
                     .monitor(
@@ -49,17 +51,22 @@ internal class CachedProtoResourcesSerializer(
         }
     }
 
-
-    override fun serialize(resources: MutableCollection<out Message>, apiVersion: Resources.ApiVersion): MutableCollection<Any> {
+    override fun serialize(
+        resources: MutableCollection<out Message>,
+        apiVersion: Resources.ApiVersion
+    ): MutableCollection<Any> {
         return if (apiVersion == V3) {
-            createTimer(reportMetrics, meterRegistry, "protobuf-cache.serialize.time").record(Supplier { getResources(resources, apiVersion) })
+            v2Timer.record(Supplier { getResources(resources, apiVersion) })
         } else {
-            createTimer(reportMetrics, meterRegistry, "protobuf-cache.serialize.time").record(Supplier { getResources(resources, apiVersion) })
+            v3Timer.record(Supplier { getResources(resources, apiVersion) })
         }
     }
 
-    private fun getResources(resources: MutableCollection<out Message>, apiVersion: Resources.ApiVersion): MutableCollection<Any> {
-        val cache = when(apiVersion) {
+    private fun getResources(
+        resources: MutableCollection<out Message>,
+        apiVersion: Resources.ApiVersion
+    ): MutableCollection<Any> {
+        val cache = when (apiVersion) {
             V2 -> cacheV2
             V3 -> cacheV3
         }

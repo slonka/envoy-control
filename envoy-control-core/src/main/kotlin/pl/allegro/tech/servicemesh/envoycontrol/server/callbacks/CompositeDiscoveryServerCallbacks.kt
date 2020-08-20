@@ -3,6 +3,7 @@ package pl.allegro.tech.servicemesh.envoycontrol.server.callbacks
 import io.envoyproxy.controlplane.server.DiscoveryServerCallbacks
 import io.envoyproxy.controlplane.server.exception.RequestException
 import io.envoyproxy.envoy.api.v2.DiscoveryRequest
+import io.envoyproxy.envoy.service.discovery.v3.DiscoveryRequest as v3DiscoveryRequest
 import io.envoyproxy.envoy.api.v2.DiscoveryResponse
 import io.micrometer.core.instrument.MeterRegistry
 import pl.allegro.tech.servicemesh.envoycontrol.logger
@@ -32,7 +33,7 @@ class CompositeDiscoveryServerCallbacks(
         runCallbacks { it.onV2StreamRequest(streamId, request) }
     }
 
-    override fun onV3StreamRequest(streamId: Long, request: io.envoyproxy.envoy.service.discovery.v3.DiscoveryRequest?) {
+    override fun onV3StreamRequest(streamId: Long, request: v3DiscoveryRequest?) {
         runCallbacks { it.onV3StreamRequest(streamId, request) }
     }
 

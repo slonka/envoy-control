@@ -4,7 +4,6 @@ import io.envoyproxy.controlplane.cache.NodeGroup
 import io.envoyproxy.controlplane.cache.Snapshot
 import io.envoyproxy.controlplane.cache.SnapshotCache
 import io.envoyproxy.controlplane.server.DefaultExecutorGroup
-import io.envoyproxy.controlplane.server.DiscoveryServer
 import io.envoyproxy.controlplane.server.ExecutorGroup
 import io.envoyproxy.controlplane.server.V2DiscoveryServer
 import io.envoyproxy.controlplane.server.callback.SnapshotCollectingCallback
@@ -23,13 +22,15 @@ import pl.allegro.tech.servicemesh.envoycontrol.server.callbacks.CompositeDiscov
 import pl.allegro.tech.servicemesh.envoycontrol.server.callbacks.LoggingDiscoveryServerCallbacks
 import pl.allegro.tech.servicemesh.envoycontrol.server.callbacks.MeteredConnectionsCallbacks
 import pl.allegro.tech.servicemesh.envoycontrol.services.MultiClusterState
-import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.clusters.EnvoyClustersFactory
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.clusters.v2.EnvoyClustersFactory
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.clusters.v3.EnvoyClustersFactory as EnvoyClustersFactoryV3
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.EnvoyEgressRoutesFactory
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.EnvoyIngressRoutesFactory
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.EnvoySnapshotFactory
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.SnapshotUpdater
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.SnapshotsVersions
-import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.endpoints.EnvoyEndpointsFactory
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.endpoints.v2.EnvoyEndpointsFactory
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.endpoints.v3.EnvoyEndpointsFactory as EnvoyEndpointsFactoryV3
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.EnvoyListenersFactory
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters.AccessLogFilterFactory
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters.EnvoyHttpFilters
@@ -197,8 +198,12 @@ class ControlPlane private constructor(
                 ingressRoutesFactory = EnvoyIngressRoutesFactory(snapshotProperties),
                 egressRoutesFactory = EnvoyEgressRoutesFactory(snapshotProperties),
                 clustersFactory = EnvoyClustersFactory(snapshotProperties),
+                clustersFactoryV3 = EnvoyClustersFactoryV3(snapshotProperties),
                 endpointsFactory = EnvoyEndpointsFactory(
-                    snapshotProperties, ServiceTagMetadataGenerator(snapshotProperties.routing.serviceTags)
+                        snapshotProperties, ServiceTagMetadataGenerator(snapshotProperties.routing.serviceTags)
+                ),
+                endpointsFactoryV3 = EnvoyEndpointsFactoryV3(
+                        snapshotProperties, ServiceTagMetadataGenerator(snapshotProperties.routing.serviceTags)
                 ),
                 listenersFactory = EnvoyListenersFactory(
                     snapshotProperties,
