@@ -1,4 +1,4 @@
-package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters
+package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters.v2
 
 import io.envoyproxy.envoy.config.filter.http.header_to_metadata.v2.Config
 

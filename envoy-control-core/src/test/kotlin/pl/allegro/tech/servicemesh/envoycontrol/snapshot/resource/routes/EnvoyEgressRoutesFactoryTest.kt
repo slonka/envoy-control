@@ -13,22 +13,23 @@ import pl.allegro.tech.servicemesh.envoycontrol.groups.hasNoRequestHeaderToAdd
 import pl.allegro.tech.servicemesh.envoycontrol.groups.hasResponseHeaderToAdd
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.RouteSpecification
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.SnapshotProperties
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.v2.EnvoyEgressRoutesFactory
 
 internal class EnvoyEgressRoutesFactoryTest {
 
     val clusters = listOf(
-        RouteSpecification(
-            clusterName = "srv1",
-            routeDomain = "srv1",
-            settings = DependencySettings(
-                handleInternalRedirect = true,
-                timeoutPolicy = Outgoing.TimeoutPolicy(
-                    idleTimeout = Durations.fromSeconds(10L),
-                    requestTimeout = Durations.fromSeconds(10L)
-                ),
-                rewriteHostHeader = true
+            RouteSpecification(
+                    clusterName = "srv1",
+                    routeDomain = "srv1",
+                    settings = DependencySettings(
+                            handleInternalRedirect = true,
+                            timeoutPolicy = Outgoing.TimeoutPolicy(
+                                    idleTimeout = Durations.fromSeconds(10L),
+                                    requestTimeout = Durations.fromSeconds(10L)
+                            ),
+                            rewriteHostHeader = true
+                    )
             )
-        )
     )
 
     @Test

@@ -1,8 +1,6 @@
 package pl.allegro.tech.servicemesh.envoycontrol.snapshot
 
-import io.envoyproxy.envoy.api.v2.Cluster
-import io.envoyproxy.envoy.api.v2.ClusterLoadAssignment
-import io.envoyproxy.envoy.api.v2.Listener
+import com.google.protobuf.Message
 import pl.allegro.tech.servicemesh.envoycontrol.groups.Group
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.SnapshotsVersions.Companion.newVersion
 import java.util.UUID
@@ -29,9 +27,9 @@ class SnapshotsVersions {
 
     fun version(
         group: Group,
-        clusters: List<Cluster>,
-        endpoints: List<ClusterLoadAssignment>,
-        listeners: List<Listener> = listOf()
+        clusters: List<Message>,
+        endpoints: List<Message>,
+        listeners: List<Message> = listOf()
     ): Version {
         val versionsWithData = versions.compute(group) { _, previous ->
             val version = when (previous) {
@@ -74,7 +72,7 @@ class SnapshotsVersions {
      */
     private fun selectEndpoints(
         previous: VersionsWithData,
-        endpoints: List<ClusterLoadAssignment>,
+        endpoints: List<Message>,
         clusterChanged: Boolean
     ) = if (!clusterChanged && previous.endpoints == endpoints) {
         previous.version.endpoints
@@ -83,9 +81,9 @@ class SnapshotsVersions {
     }
 
     private fun selectClusters(
-        previous: VersionsWithData,
-        current: List<Cluster>,
-        clustersChanged: Boolean
+            previous: VersionsWithData,
+            current: List<Message>,
+            clustersChanged: Boolean
     ) = if (!clustersChanged) previous.version.clusters else ClustersVersion(current)
 
     /**
@@ -99,9 +97,9 @@ class SnapshotsVersions {
 
     private data class VersionsWithData(
         val version: Version,
-        val clusters: List<Cluster>,
-        val endpoints: List<ClusterLoadAssignment>,
-        val listeners: List<Listener>
+        val clusters: List<Message>,
+        val endpoints: List<Message>,
+        val listeners: List<Message>
     )
 
     data class Version(
@@ -113,7 +111,7 @@ class SnapshotsVersions {
 }
 
 data class ClustersVersion(val value: String) {
-    constructor(clusters: List<Cluster>) : this(
+    constructor(clusters: List<Message>) : this(
             if (clusters.isEmpty()) EMPTY_VERSION.value else newVersion()
     )
 
@@ -123,7 +121,7 @@ data class ClustersVersion(val value: String) {
 }
 
 data class EndpointsVersion(val value: String) {
-    constructor(clusters: List<Cluster>) : this(
+    constructor(clusters: List<Message>) : this(
             if (clusters.isEmpty()) EMPTY_VERSION.value else newVersion()
     )
 

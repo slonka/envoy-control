@@ -85,20 +85,20 @@ class SnapshotDebugController(controlPlane: ControlPlane) {
     fun globalSnapshot(@RequestParam xds: Boolean?): ResponseEntity<SnapshotDebugInfo> {
         val globalSnapshot = snapshotUpdater.getGlobalSnapshot()
         if (xds == true) {
-            return if (globalSnapshot?.xdsSnapshot == null) {
+            return if (globalSnapshot?.xdsV2Snapshot == null) {
                 throw GlobalSnapshotNotFoundException("Xds global snapshot missing")
             } else {
                 ResponseEntity(
-                    SnapshotDebugInfo(globalSnapshot.xdsSnapshot!!),
+                    SnapshotDebugInfo(globalSnapshot.xdsV2Snapshot!!),
                     HttpStatus.OK
                 )
             }
         }
-        return if (globalSnapshot?.adsSnapshot == null) {
+        return if (globalSnapshot?.adsV2Snapshot == null) {
             throw GlobalSnapshotNotFoundException("Ads global snapshot missing")
         } else {
             ResponseEntity(
-                SnapshotDebugInfo(globalSnapshot.adsSnapshot!!),
+                SnapshotDebugInfo(globalSnapshot.adsV2Snapshot!!),
                 HttpStatus.OK
             )
         }

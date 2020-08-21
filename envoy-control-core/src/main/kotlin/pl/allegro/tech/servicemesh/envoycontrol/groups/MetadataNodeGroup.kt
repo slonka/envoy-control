@@ -127,15 +127,15 @@ class MetadataNodeGroup(
 
     private fun createV3Group(node: io.envoyproxy.envoy.config.core.v3.Node): Group {
         val metadata = NodeMetadata(node.metadata, properties)
-        return createGroup(metadata, node.id, node.metadata)
+        return createGroup(metadata, node.id, node.metadata, GroupVersion.V3)
     }
 
     private fun createV2Group(node: Node): Group {
         val metadata = NodeMetadata(node.metadata, properties)
-        return createGroup(metadata, node.id, node.metadata)
+        return createGroup(metadata, node.id, node.metadata, GroupVersion.V2)
     }
 
-    private fun createGroup(nodeMetadata: NodeMetadata, id: String, metadata: Struct): Group {
+    private fun createGroup(nodeMetadata: NodeMetadata, id: String, metadata: Struct, version: GroupVersion): Group {
         val serviceName = serviceName(nodeMetadata)
         val proxySettings = proxySettings(nodeMetadata)
         val listenersConfig = createListenersConfig(id, metadata)
@@ -146,14 +146,16 @@ class MetadataNodeGroup(
                         nodeMetadata.communicationMode,
                         serviceName,
                         proxySettings,
-                        listenersConfig
+                        listenersConfig,
+                        version
                 )
             else ->
                 ServicesGroup(
                         nodeMetadata.communicationMode,
                         serviceName,
                         proxySettings,
-                        listenersConfig
+                        listenersConfig,
+                        version
                 )
         }
     }

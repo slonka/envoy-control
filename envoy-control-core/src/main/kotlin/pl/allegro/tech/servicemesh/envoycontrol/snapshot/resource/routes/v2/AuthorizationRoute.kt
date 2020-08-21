@@ -1,4 +1,4 @@
-package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes
+package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.v2
 
 import io.envoyproxy.envoy.api.v2.route.Route
 

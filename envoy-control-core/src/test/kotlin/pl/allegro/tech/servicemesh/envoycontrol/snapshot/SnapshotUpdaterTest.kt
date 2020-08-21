@@ -36,14 +36,13 @@ import pl.allegro.tech.servicemesh.envoycontrol.services.ServiceInstance
 import pl.allegro.tech.servicemesh.envoycontrol.services.ServiceInstances
 import pl.allegro.tech.servicemesh.envoycontrol.services.ServicesState
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.clusters.v2.EnvoyClustersFactory
-import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.clusters.v3.EnvoyClustersFactory as EnvoyClustersFactoryV3
-import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.EnvoyEgressRoutesFactory
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.v2.EnvoyEgressRoutesFactory
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.endpoints.v2.EnvoyEndpointsFactory
-import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.endpoints.v3.EnvoyEndpointsFactory as EnvoyEndpointsFactoryV3
-import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.EnvoyIngressRoutesFactory
-import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.EnvoyListenersFactory
-import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters.EnvoyHttpFilters
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.v2.EnvoyIngressRoutesFactory
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.v2.EnvoyListenersFactory
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters.v2.EnvoyHttpFilters
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.ServiceTagMetadataGenerator
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.v2.EnvoySnapshotFactory
 import pl.allegro.tech.servicemesh.envoycontrol.utils.DirectScheduler
 import pl.allegro.tech.servicemesh.envoycontrol.utils.ParallelScheduler
 import pl.allegro.tech.servicemesh.envoycontrol.utils.ParallelizableScheduler
@@ -54,6 +53,13 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.clusters.v3.EnvoyClustersFactory as EnvoyClustersFactoryV3
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.v3.EnvoyEgressRoutesFactory as EnvoyEgressRoutesFactoryV3
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.v3.EnvoyIngressRoutesFactory as EnvoyIngressRoutesFactoryV3
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.v3.EnvoySnapshotFactory as EnvoySnapshotFactoryV3
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.endpoints.v3.EnvoyEndpointsFactory as EnvoyEndpointsFactoryV3
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.v3.EnvoyListenersFactory as EnvoyListenersFactoryV3
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters.v3.EnvoyHttpFilters as EnvoyHttpFiltersV3
 
 class SnapshotUpdaterTest {
 
@@ -262,10 +268,10 @@ class SnapshotUpdaterTest {
 
         // then
         assertThat(results.size).isEqualTo(2)
-        results[0].adsSnapshot!!.hasHttp2Cluster("service")
-        results[0].xdsSnapshot!!.hasHttp2Cluster("service")
-        results[1].adsSnapshot!!.hasHttp2Cluster("service")
-        results[1].xdsSnapshot!!.hasHttp2Cluster("service")
+        results[0].adsV2Snapshot!!.hasHttp2Cluster("service")
+        results[0].xdsV2Snapshot!!.hasHttp2Cluster("service")
+        results[1].adsV2Snapshot!!.hasHttp2Cluster("service")
+        results[1].xdsV2Snapshot!!.hasHttp2Cluster("service")
     }
 
     @Test
@@ -297,17 +303,17 @@ class SnapshotUpdaterTest {
         // then
         assertThat(results.size).isEqualTo(2)
 
-        results[0].adsSnapshot!!
+        results[0].adsV2Snapshot!!
             .hasHttp2Cluster("service")
             .hasAnEndpoint("service", "127.0.0.3", 4444)
-        results[0].xdsSnapshot!!
+        results[0].xdsV2Snapshot!!
             .hasHttp2Cluster("service")
             .hasAnEndpoint("service", "127.0.0.3", 4444)
 
-        results[1].adsSnapshot!!
+        results[1].adsV2Snapshot!!
             .hasHttp2Cluster("service")
             .hasEmptyEndpoints("service")
-        results[1].xdsSnapshot!!
+        results[1].xdsV2Snapshot!!
             .hasHttp2Cluster("service")
             .hasEmptyEndpoints("service")
     }
@@ -522,26 +528,40 @@ class SnapshotUpdaterTest {
     }
 
     private fun snapshotFactory(snapshotProperties: SnapshotProperties, meterRegistry: MeterRegistry) =
-        EnvoySnapshotFactory(
-                ingressRoutesFactory = EnvoyIngressRoutesFactory(snapshotProperties),
-                egressRoutesFactory = EnvoyEgressRoutesFactory(snapshotProperties),
-                clustersFactory = EnvoyClustersFactory(snapshotProperties),
-                endpointsFactory = EnvoyEndpointsFactory(
-                        snapshotProperties, ServiceTagMetadataGenerator(snapshotProperties.routing.serviceTags)
-                ),
-                listenersFactory = EnvoyListenersFactory(
-                    snapshotProperties,
-                    EnvoyHttpFilters.emptyFilters
-                ),
-            // Remember when LDS change we have to send RDS again
-                snapshotsVersions = SnapshotsVersions(),
-                properties = snapshotProperties,
-                meterRegistry = meterRegistry,
-                clustersFactoryV3 = EnvoyClustersFactoryV3(snapshotProperties),
-                endpointsFactoryV3 = EnvoyEndpointsFactoryV3(
-                        snapshotProperties, ServiceTagMetadataGenerator(snapshotProperties.routing.serviceTags)
-                )
-        )
+            EnvoySnapshotFactory(
+                    ingressRoutesFactory = EnvoyIngressRoutesFactory(snapshotProperties),
+                    egressRoutesFactory = EnvoyEgressRoutesFactory(snapshotProperties),
+                    clustersFactory = EnvoyClustersFactory(snapshotProperties),
+                    endpointsFactory = EnvoyEndpointsFactory(
+                            snapshotProperties, ServiceTagMetadataGenerator(snapshotProperties.routing.serviceTags)
+                    ),
+                    listenersFactory = EnvoyListenersFactory(
+                            snapshotProperties,
+                            EnvoyHttpFilters.emptyFilters
+                    ),
+                    // Remember when LDS change we have to send RDS again
+                    snapshotsVersions = SnapshotsVersions(),
+                    properties = snapshotProperties,
+                    meterRegistry = meterRegistry
+            )
+
+    private fun snapshotFactoryV3(snapshotProperties: SnapshotProperties, meterRegistry: MeterRegistry) =
+            EnvoySnapshotFactoryV3(
+                    ingressRoutesFactory = EnvoyIngressRoutesFactoryV3(snapshotProperties),
+                    egressRoutesFactory = EnvoyEgressRoutesFactoryV3(snapshotProperties),
+                    clustersFactory = EnvoyClustersFactoryV3(snapshotProperties),
+                    endpointsFactory = EnvoyEndpointsFactoryV3(
+                            snapshotProperties, ServiceTagMetadataGenerator(snapshotProperties.routing.serviceTags)
+                    ),
+                    listenersFactory = EnvoyListenersFactoryV3(
+                            snapshotProperties,
+                            EnvoyHttpFiltersV3.emptyFilters
+                    ),
+                    // Remember when LDS change we have to send RDS again
+                    snapshotsVersions = SnapshotsVersions(),
+                    properties = snapshotProperties,
+                    meterRegistry = meterRegistry
+            )
 
     private fun snapshotUpdater(
         cache: SnapshotCache<Group, Snapshot>,
@@ -552,6 +572,7 @@ class SnapshotUpdaterTest {
             cache = cache,
             properties = properties,
             snapshotFactory = snapshotFactory(properties, simpleMeterRegistry),
+            snapshotFactoryV3 = snapshotFactoryV3(properties, simpleMeterRegistry),
             globalSnapshotScheduler = Schedulers.newSingle("update-snapshot"),
             groupSnapshotScheduler = groupSnapshotScheduler,
             onGroupAdded = Flux.just(groups),

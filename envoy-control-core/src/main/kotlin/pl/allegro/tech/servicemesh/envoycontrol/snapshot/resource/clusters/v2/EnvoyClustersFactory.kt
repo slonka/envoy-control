@@ -64,8 +64,8 @@ class EnvoyClustersFactory(
             .build()
 
     fun getClustersForServices(
-        services: Collection<ClusterConfiguration>,
-        communicationMode: CommunicationMode
+            services: Collection<ClusterConfiguration>,
+            communicationMode: CommunicationMode
     ): List<Cluster> {
         return services.map { edsCluster(it, communicationMode) }
     }
@@ -215,8 +215,8 @@ class EnvoyClustersFactory(
     }
 
     private fun edsCluster(
-        clusterConfiguration: ClusterConfiguration,
-        communicationMode: CommunicationMode
+            clusterConfiguration: ClusterConfiguration,
+            communicationMode: CommunicationMode
     ): Cluster {
         val clusterBuilder = Cluster.newBuilder()
 

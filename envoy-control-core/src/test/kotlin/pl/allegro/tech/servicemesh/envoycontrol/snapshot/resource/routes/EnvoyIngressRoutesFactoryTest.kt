@@ -26,6 +26,7 @@ import pl.allegro.tech.servicemesh.envoycontrol.snapshot.RetryPoliciesProperties
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.RetryPolicyProperties
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.SecuredRoute
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.SnapshotProperties
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.v2.EnvoyIngressRoutesFactory
 import java.time.Duration
 
 internal class EnvoyIngressRoutesFactoryTest {

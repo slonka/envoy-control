@@ -1,6 +1,7 @@
 package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters
 
 import com.google.re2j.Pattern
+import io.envoyproxy.envoy.config.accesslog.v3.ComparisonFilter as ComparisonFilterV3
 import io.envoyproxy.envoy.config.filter.accesslog.v2.ComparisonFilter
 import pl.allegro.tech.servicemesh.envoycontrol.groups.AccessLogFilterSettings
 import pl.allegro.tech.servicemesh.envoycontrol.groups.NodeMetadataValidationException
@@ -15,15 +16,28 @@ class AccessLogFilterFactory {
     )
 
     fun parseStatusCodeFilter(value: String): AccessLogFilterSettings.StatusCodeFilterSettings {
-        if (!statusCodeFilterPattern.matches(value)) {
-            throw NodeMetadataValidationException(
-                    "Invalid access log status code filter. Expected OPERATOR:STATUS_CODE"
-            )
-        }
+        validateValue(value)
         val split = value.split(delimiter)
         return AccessLogFilterSettings.StatusCodeFilterSettings(
                 comparisonOperator = ComparisonFilter.Op.valueOf(split[0]),
                 comparisonCode = split[1].toInt()
         )
+    }
+
+    fun parseStatusCodeFilterV3(value: String): AccessLogFilterSettings.StatusCodeFilterSettingsV3 {
+        validateValue(value)
+        val split = value.split(delimiter)
+        return AccessLogFilterSettings.StatusCodeFilterSettingsV3(
+                comparisonOperator = ComparisonFilterV3.Op.valueOf(split[0]),
+                comparisonCode = split[1].toInt()
+        )
+    }
+
+    private fun validateValue(value: String) {
+        if (!statusCodeFilterPattern.matches(value)) {
+            throw NodeMetadataValidationException(
+                    "Invalid access log status code filter. Expected OPERATOR:STATUS_CODE"
+            )
+        }
     }
 }

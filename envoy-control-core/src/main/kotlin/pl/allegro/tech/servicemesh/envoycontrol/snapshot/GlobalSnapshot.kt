@@ -7,25 +7,25 @@ import io.envoyproxy.envoy.config.cluster.v3.Cluster as ClusterV3
 import io.envoyproxy.envoy.config.endpoint.v3.ClusterLoadAssignment as ClusterLoadAssignmentV3
 
 data class GlobalSnapshot(
-    val clusters: SnapshotResources<Cluster>,
-    val clustersV3: SnapshotResources<ClusterV3>,
-    val allServicesNames: Set<String>,
-    val endpoints: SnapshotResources<ClusterLoadAssignment>,
-    val endpointsV3: SnapshotResources<ClusterLoadAssignmentV3>,
-    val clusterConfigurations: Map<String, ClusterConfiguration>,
-    val securedClusters: SnapshotResources<Cluster>,
-    val securedClustersV3: SnapshotResources<ClusterV3>
+        val clusters: SnapshotResources<Cluster>,
+        val clustersV3: SnapshotResources<ClusterV3>,
+        val allServicesNames: Set<String>,
+        val endpoints: SnapshotResources<ClusterLoadAssignment>,
+        val endpointsV3: SnapshotResources<ClusterLoadAssignmentV3>,
+        val clusterConfigurations: Map<String, ClusterConfiguration>,
+        val securedClusters: SnapshotResources<Cluster>,
+        val securedClustersV3: SnapshotResources<ClusterV3>
 )
 
 internal fun globalSnapshot(
-    clusters: Iterable<Cluster>,
-    clustersV3: Iterable<ClusterV3>,
-    endpoints: Iterable<ClusterLoadAssignment>,
-    endpointsV3: Iterable<ClusterLoadAssignmentV3>,
-    properties: OutgoingPermissionsProperties = OutgoingPermissionsProperties(),
-    clusterConfigurations: Map<String, ClusterConfiguration>,
-    securedClusters: List<Cluster>,
-    securedClustersV3: List<ClusterV3>
+        clusters: Iterable<Cluster> = listOf(),
+        clustersV3: Iterable<ClusterV3> = listOf(),
+        endpoints: Iterable<ClusterLoadAssignment> = listOf(),
+        endpointsV3: Iterable<ClusterLoadAssignmentV3> = listOf(),
+        properties: OutgoingPermissionsProperties = OutgoingPermissionsProperties(),
+        clusterConfigurations: Map<String, ClusterConfiguration>,
+        securedClusters: List<Cluster> = listOf(),
+        securedClustersV3: List<ClusterV3> = listOf()
 ): GlobalSnapshot {
     val clusters = SnapshotResources.create(clusters, "")
     val clustersV3 = SnapshotResources.create(clustersV3, "")

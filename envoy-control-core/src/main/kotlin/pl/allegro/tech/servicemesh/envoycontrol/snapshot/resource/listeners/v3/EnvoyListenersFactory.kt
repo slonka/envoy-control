@@ -1,36 +1,36 @@
-package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners
+package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.v3
 
 import com.google.protobuf.BoolValue
 import com.google.protobuf.Duration
 import com.google.protobuf.Struct
 import com.google.protobuf.Value
 import com.google.protobuf.util.Durations
-import io.envoyproxy.envoy.api.v2.Listener
-import io.envoyproxy.envoy.api.v2.auth.CommonTlsContext
-import io.envoyproxy.envoy.api.v2.auth.DownstreamTlsContext
-import io.envoyproxy.envoy.api.v2.auth.SdsSecretConfig
-import io.envoyproxy.envoy.api.v2.auth.TlsParameters
-import io.envoyproxy.envoy.api.v2.core.RuntimeUInt32
-import io.envoyproxy.envoy.api.v2.core.Address
-import io.envoyproxy.envoy.api.v2.core.AggregatedConfigSource
-import io.envoyproxy.envoy.api.v2.core.ApiConfigSource
-import io.envoyproxy.envoy.api.v2.core.ConfigSource
-import io.envoyproxy.envoy.api.v2.core.GrpcService
-import io.envoyproxy.envoy.api.v2.core.Http1ProtocolOptions
-import io.envoyproxy.envoy.api.v2.core.HttpProtocolOptions
-import io.envoyproxy.envoy.api.v2.core.SocketAddress
-import io.envoyproxy.envoy.api.v2.core.TransportSocket
-import io.envoyproxy.envoy.api.v2.listener.Filter
-import io.envoyproxy.envoy.api.v2.listener.FilterChain
-import io.envoyproxy.envoy.api.v2.listener.FilterChainMatch
-import io.envoyproxy.envoy.config.accesslog.v2.FileAccessLog
-import io.envoyproxy.envoy.config.filter.accesslog.v2.AccessLog
-import io.envoyproxy.envoy.config.filter.accesslog.v2.AccessLogFilter
-import io.envoyproxy.envoy.config.filter.accesslog.v2.ComparisonFilter
-import io.envoyproxy.envoy.config.filter.accesslog.v2.StatusCodeFilter
-import io.envoyproxy.envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager
-import io.envoyproxy.envoy.config.filter.network.http_connection_manager.v2.HttpFilter
-import io.envoyproxy.envoy.config.filter.network.http_connection_manager.v2.Rds
+import io.envoyproxy.envoy.config.accesslog.v3.AccessLog
+import io.envoyproxy.envoy.config.accesslog.v3.AccessLogFilter
+import io.envoyproxy.envoy.config.accesslog.v3.ComparisonFilter
+import io.envoyproxy.envoy.config.accesslog.v3.StatusCodeFilter
+import io.envoyproxy.envoy.config.core.v3.Address
+import io.envoyproxy.envoy.config.core.v3.AggregatedConfigSource
+import io.envoyproxy.envoy.config.core.v3.ApiConfigSource
+import io.envoyproxy.envoy.config.core.v3.ConfigSource
+import io.envoyproxy.envoy.config.core.v3.GrpcService
+import io.envoyproxy.envoy.config.core.v3.Http1ProtocolOptions
+import io.envoyproxy.envoy.config.core.v3.HttpProtocolOptions
+import io.envoyproxy.envoy.config.core.v3.RuntimeUInt32
+import io.envoyproxy.envoy.config.core.v3.SocketAddress
+import io.envoyproxy.envoy.config.core.v3.TransportSocket
+import io.envoyproxy.envoy.config.listener.v3.Filter
+import io.envoyproxy.envoy.config.listener.v3.FilterChain
+import io.envoyproxy.envoy.config.listener.v3.FilterChainMatch
+import io.envoyproxy.envoy.config.listener.v3.Listener
+import io.envoyproxy.envoy.extensions.access_loggers.file.v3.FileAccessLog
+import io.envoyproxy.envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+import io.envoyproxy.envoy.extensions.filters.network.http_connection_manager.v3.HttpFilter
+import io.envoyproxy.envoy.extensions.filters.network.http_connection_manager.v3.Rds
+import io.envoyproxy.envoy.extensions.transport_sockets.tls.v3.CommonTlsContext
+import io.envoyproxy.envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+import io.envoyproxy.envoy.extensions.transport_sockets.tls.v3.SdsSecretConfig
+import io.envoyproxy.envoy.extensions.transport_sockets.tls.v3.TlsParameters
 import pl.allegro.tech.servicemesh.envoycontrol.groups.AccessLogFilterSettings
 import pl.allegro.tech.servicemesh.envoycontrol.groups.CommunicationMode
 import pl.allegro.tech.servicemesh.envoycontrol.groups.CommunicationMode.ADS
@@ -39,7 +39,7 @@ import pl.allegro.tech.servicemesh.envoycontrol.groups.Group
 import pl.allegro.tech.servicemesh.envoycontrol.groups.ListenersConfig
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.GlobalSnapshot
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.SnapshotProperties
-import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters.EnvoyHttpFilters
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters.v3.EnvoyHttpFilters
 import com.google.protobuf.Any as ProtobufAny
 
 typealias HttpFilterFactory = (node: Group, snapshot: GlobalSnapshot) -> HttpFilter?
@@ -67,8 +67,8 @@ class EnvoyListenersFactory(
             .setRequireClientCertificate(requireClientCertificate)
             .setCommonTlsContext(CommonTlsContext.newBuilder()
                     .setTlsParams(TlsParameters.newBuilder()
-                            .setTlsMinimumProtocolVersion(tlsProperties.protocol.minimumVersion)
-                            .setTlsMaximumProtocolVersion(tlsProperties.protocol.maximumVersion)
+                            .setTlsMinimumProtocolVersion(tlsProperties.protocol.minimumVersionV3)
+                            .setTlsMaximumProtocolVersion(tlsProperties.protocol.maximumVersionV3)
                             .addAllCipherSuites(tlsProperties.protocol.cipherSuites)
                             .build())
                     .addTlsCertificateSdsSecretConfigs(SdsSecretConfig.newBuilder()
@@ -214,10 +214,10 @@ class EnvoyListenersFactory(
     }
 
     private fun addHttpFilters(
-        connectionManagerBuilder: HttpConnectionManager.Builder,
-        filterFactories: List<HttpFilterFactory>,
-        group: Group,
-        globalSnapshot: GlobalSnapshot
+            connectionManagerBuilder: HttpConnectionManager.Builder,
+            filterFactories: List<HttpFilterFactory>,
+            group: Group,
+            globalSnapshot: GlobalSnapshot
     ) {
         filterFactories.forEach { filterFactory ->
             val filter = filterFactory(group, globalSnapshot)
@@ -320,7 +320,7 @@ class EnvoyListenersFactory(
                 .build()
     }
 
-    fun AccessLog.Builder.buildFromSettings(settings: AccessLogFilterSettings.StatusCodeFilterSettings) {
+    fun AccessLog.Builder.buildFromSettings(settings: AccessLogFilterSettings.StatusCodeFilterSettingsV3) {
         this.setFilter(
                 AccessLogFilter.newBuilder().setStatusCodeFilter(
                         StatusCodeFilter.newBuilder()
@@ -348,7 +348,7 @@ class EnvoyListenersFactory(
         val builder = AccessLog.newBuilder().setName("envoy.file_access_log")
 
         accessLogFilterSettings?.let { settings ->
-            settings.statusCodeFilterSettings?.let {
+            settings.statusCodeFilterSettingsV3?.let {
                 builder.buildFromSettings(it)
             }
         }

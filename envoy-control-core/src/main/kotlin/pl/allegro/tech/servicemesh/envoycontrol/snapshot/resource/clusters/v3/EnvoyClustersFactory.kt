@@ -36,11 +36,11 @@ import pl.allegro.tech.servicemesh.envoycontrol.groups.CommunicationMode.ADS
 import pl.allegro.tech.servicemesh.envoycontrol.groups.CommunicationMode.XDS
 import pl.allegro.tech.servicemesh.envoycontrol.groups.Group
 import pl.allegro.tech.servicemesh.envoycontrol.groups.ServicesGroup
-import pl.allegro.tech.servicemesh.envoycontrol.snapshot.ClusterConfiguration
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.GlobalSnapshot
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.SnapshotProperties
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.Threshold
 import pl.allegro.tech.servicemesh.envoycontrol.protocol.TlsUtils
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.ClusterConfiguration
 
 class EnvoyClustersFactory(
     private val properties: SnapshotProperties
@@ -64,8 +64,8 @@ class EnvoyClustersFactory(
             .build()
 
     fun getClustersForServices(
-        services: Collection<ClusterConfiguration>,
-        communicationMode: CommunicationMode
+            services: Collection<ClusterConfiguration>,
+            communicationMode: CommunicationMode
     ): List<Cluster> {
         return services.map { edsCluster(it, communicationMode) }
     }
@@ -215,8 +215,8 @@ class EnvoyClustersFactory(
     }
 
     private fun edsCluster(
-        clusterConfiguration: ClusterConfiguration,
-        communicationMode: CommunicationMode
+            clusterConfiguration: ClusterConfiguration,
+            communicationMode: CommunicationMode
     ): Cluster {
         val clusterBuilder = Cluster.newBuilder()
 

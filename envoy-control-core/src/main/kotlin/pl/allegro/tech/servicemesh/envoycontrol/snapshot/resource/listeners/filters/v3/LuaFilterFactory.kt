@@ -1,10 +1,11 @@
-package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters
+package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters.v3
 
 import com.google.protobuf.Any
-import io.envoyproxy.envoy.config.filter.http.lua.v2.Lua
-import io.envoyproxy.envoy.config.filter.network.http_connection_manager.v2.HttpFilter
+import io.envoyproxy.envoy.extensions.filters.network.http_connection_manager.v3.HttpFilter
+import io.envoyproxy.envoy.extensions.filters.http.lua.v3.Lua
 import pl.allegro.tech.servicemesh.envoycontrol.groups.Group
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.IncomingPermissionsProperties
+
 
 class LuaFilterFactory(incomingPermissionsProperties: IncomingPermissionsProperties) {
 

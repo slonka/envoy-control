@@ -1,24 +1,31 @@
 package pl.allegro.tech.servicemesh.envoycontrol.groups
 
 sealed class Group {
+    abstract val version: GroupVersion
     abstract val communicationMode: CommunicationMode
     abstract val serviceName: String
     abstract val proxySettings: ProxySettings
     abstract val listenersConfig: ListenersConfig?
 }
 
+enum class GroupVersion {
+    V2, V3
+}
+
 data class ServicesGroup(
     override val communicationMode: CommunicationMode,
     override val serviceName: String = "",
     override val proxySettings: ProxySettings = ProxySettings(),
-    override val listenersConfig: ListenersConfig? = null
+    override val listenersConfig: ListenersConfig? = null,
+    override val version: GroupVersion = GroupVersion.V2
 ) : Group()
 
 data class AllServicesGroup(
     override val communicationMode: CommunicationMode,
     override val serviceName: String = "",
     override val proxySettings: ProxySettings = ProxySettings(),
-    override val listenersConfig: ListenersConfig? = null
+    override val listenersConfig: ListenersConfig? = null,
+    override val version: GroupVersion = GroupVersion.V2
 ) : Group()
 
 data class ListenersConfig(

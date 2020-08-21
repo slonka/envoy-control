@@ -1,4 +1,4 @@
-package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes
+package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.routes.v2
 
 import com.google.protobuf.util.Durations
 import io.envoyproxy.controlplane.cache.TestResources
@@ -65,9 +65,9 @@ class EnvoyEgressRoutesFactory(
      * @see TestResources.createRoute
      */
     fun createEgressRouteConfig(
-        serviceName: String,
-        routes: Collection<RouteSpecification>,
-        addUpstreamAddressHeader: Boolean
+            serviceName: String,
+            routes: Collection<RouteSpecification>,
+            addUpstreamAddressHeader: Boolean
     ): RouteConfiguration {
         val virtualHosts = routes.map { routeSpecification ->
             VirtualHost.newBuilder()

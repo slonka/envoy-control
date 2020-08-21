@@ -1,4 +1,4 @@
-package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters
+package pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters.v2
 
 import com.google.protobuf.Any
 import io.envoyproxy.envoy.config.filter.http.header_to_metadata.v2.Config
@@ -15,7 +15,7 @@ class EnvoyDefaultFilters(
             snapshotProperties.routes.status
     )
     private val luaFilterFactory = LuaFilterFactory(
-        snapshotProperties.incomingPermissions
+            snapshotProperties.incomingPermissions
     )
 
     private val defaultServiceTagFilterRules = ServiceTagFilter.serviceTagFilterRules(

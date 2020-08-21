@@ -7,6 +7,7 @@ import com.google.protobuf.util.Durations
 import io.envoyproxy.controlplane.server.exception.RequestException
 import io.envoyproxy.envoy.config.filter.accesslog.v2.ComparisonFilter
 import io.grpc.Status
+import io.envoyproxy.envoy.config.accesslog.v3.ComparisonFilter as ComparisonFilterV3
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.SnapshotProperties
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters.AccessLogFilterFactory
 import java.net.URL
@@ -26,15 +27,21 @@ class NodeMetadata(metadata: Struct, properties: SnapshotProperties) {
 }
 
 data class AccessLogFilterSettings(
-    val statusCodeFilterSettings: StatusCodeFilterSettings?
+    val statusCodeFilterSettings: StatusCodeFilterSettings?,
+    val statusCodeFilterSettingsV3: StatusCodeFilterSettingsV3?
 ) {
     constructor(proto: Value?, accessLogFilterFactory: AccessLogFilterFactory) : this(
-        statusCodeFilterSettings = proto?.field("status_code_filter").toStatusCodeFilter(accessLogFilterFactory)
+        statusCodeFilterSettings = proto?.field("status_code_filter").toStatusCodeFilter(accessLogFilterFactory),
+        statusCodeFilterSettingsV3 = proto?.field("status_code_filter").toStatusCodeFilterV3(accessLogFilterFactory)
     )
 
     data class StatusCodeFilterSettings(
-        val comparisonOperator: ComparisonFilter.Op,
-        val comparisonCode: Int
+            val comparisonOperator: ComparisonFilter.Op,
+            val comparisonCode: Int
+    )
+    data class StatusCodeFilterSettingsV3(
+            val comparisonOperator: ComparisonFilterV3.Op,
+            val comparisonCode: Int
     )
 }
 
@@ -69,9 +76,20 @@ private fun getCommunicationMode(proto: Value?): CommunicationMode {
     }
 }
 
-fun Value?.toStatusCodeFilter(accessLogFilterFactory: AccessLogFilterFactory):
-        AccessLogFilterSettings.StatusCodeFilterSettings? = this?.stringValue?.let {
-    accessLogFilterFactory.parseStatusCodeFilter(it.toUpperCase())
+fun Value?.toStatusCodeFilter(
+        accessLogFilterFactory: AccessLogFilterFactory
+): AccessLogFilterSettings.StatusCodeFilterSettings? {
+    return this?.stringValue?.let {
+        accessLogFilterFactory.parseStatusCodeFilter(it.toUpperCase())
+    }
+}
+
+fun Value?.toStatusCodeFilterV3(
+        accessLogFilterFactory: AccessLogFilterFactory
+): AccessLogFilterSettings.StatusCodeFilterSettingsV3? {
+    return this?.stringValue?.let {
+        accessLogFilterFactory.parseStatusCodeFilterV3(it.toUpperCase())
+    }
 }
 
 private fun Value?.toOutgoing(properties: SnapshotProperties): Outgoing {

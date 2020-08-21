@@ -27,6 +27,7 @@ import pl.allegro.tech.servicemesh.envoycontrol.snapshot.IncomingPermissionsProp
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.SelectorMatching
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.SourceIpAuthenticationProperties
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.StatusRouteProperties
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.resource.listeners.filters.v2.RBACFilterFactory
 
 @Suppress("LargeClass") // TODO: https://github.com/allegro/envoy-control/issues/121
 internal class RBACFilterFactoryTest {
@@ -48,7 +49,7 @@ internal class RBACFilterFactoryTest {
                 it.enabled = true
                 it.sourceIpAuthentication = SourceIpAuthenticationProperties().also { ipProperties ->
                     ipProperties.ipFromRange = mutableMapOf(
-                        "client1" to setOf("192.168.1.0/24", "192.168.2.0/28")
+                            "client1" to setOf("192.168.1.0/24", "192.168.2.0/28")
                     )
                 }
             },
@@ -70,7 +71,7 @@ internal class RBACFilterFactoryTest {
                 it.sourceIpAuthentication = SourceIpAuthenticationProperties().also { ipProperties ->
                     ipProperties.ipFromServiceDiscovery.enabledForIncomingServices = listOf("client1")
                     ipProperties.ipFromRange = mutableMapOf(
-                        "client2" to setOf("192.168.1.0/24", "192.168.2.0/28")
+                            "client2" to setOf("192.168.1.0/24", "192.168.2.0/28")
                     )
                 }
                 it.selectorMatching = mutableMapOf(
@@ -138,13 +139,14 @@ internal class RBACFilterFactoryTest {
     fun `should create RBAC filter with two status routes permissions when no incoming permissions are defined`() {
         // given
         val rbacFilterFactoryWithStatusRoute = RBACFilterFactory(
-            IncomingPermissionsProperties().also { it.enabled = true },
-            StatusRouteProperties().also { it.enabled = true; it.endpoints =
-                mutableListOf(
-                    EndpointMatch(),
-                    EndpointMatch().also { endpoint -> endpoint.path = "/example-endpoint/"; endpoint.matchingType = PathMatchingType.PATH }
-                )
-            }
+                IncomingPermissionsProperties().also { it.enabled = true },
+                StatusRouteProperties().also {
+                    it.enabled = true; it.endpoints =
+                        mutableListOf(
+                                EndpointMatch(),
+                                EndpointMatch().also { endpoint -> endpoint.path = "/example-endpoint/"; endpoint.matchingType = PathMatchingType.PATH }
+                        )
+                }
         )
         val incomingPermission = Incoming(permissionsEnabled = true)
         val expectedRbacBuilder = getRBACFilter(expectedTwoStatusRoutesPermissionsJson)

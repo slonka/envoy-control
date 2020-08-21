@@ -9,6 +9,8 @@ import pl.allegro.tech.servicemesh.envoycontrol.groups.CommunicationMode.XDS
 import pl.allegro.tech.servicemesh.envoycontrol.groups.Group
 import pl.allegro.tech.servicemesh.envoycontrol.logger
 import pl.allegro.tech.servicemesh.envoycontrol.services.MultiClusterState
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.v2.EnvoySnapshotFactory
+import pl.allegro.tech.servicemesh.envoycontrol.snapshot.v3.EnvoySnapshotFactory as EnvoySnapshotFactoryV3
 import pl.allegro.tech.servicemesh.envoycontrol.utils.ParallelizableScheduler
 import pl.allegro.tech.servicemesh.envoycontrol.utils.doOnNextScheduledOn
 import pl.allegro.tech.servicemesh.envoycontrol.utils.measureBuffer
@@ -19,13 +21,14 @@ import reactor.core.publisher.Mono
 import reactor.core.scheduler.Scheduler
 
 class SnapshotUpdater(
-    private val cache: SnapshotCache<Group, Snapshot>,
-    private val properties: SnapshotProperties,
-    private val snapshotFactory: EnvoySnapshotFactory,
-    private val globalSnapshotScheduler: Scheduler,
-    private val groupSnapshotScheduler: ParallelizableScheduler,
-    private val onGroupAdded: Flux<out List<Group>>,
-    private val meterRegistry: MeterRegistry
+        private val cache: SnapshotCache<Group, Snapshot>,
+        private val properties: SnapshotProperties,
+        private val snapshotFactory: EnvoySnapshotFactory,
+        private val snapshotFactoryV3: EnvoySnapshotFactoryV3,
+        private val globalSnapshotScheduler: Scheduler,
+        private val groupSnapshotScheduler: ParallelizableScheduler,
+        private val onGroupAdded: Flux<out List<Group>>,
+        private val meterRegistry: MeterRegistry
 ) {
     companion object {
         private val logger by logger()
@@ -56,8 +59,10 @@ class SnapshotUpdater(
                     UpdateResult(
                             action = newUpdate.action,
                             groups = newUpdate.groups,
-                            adsSnapshot = newUpdate.adsSnapshot ?: previous.adsSnapshot,
-                            xdsSnapshot = newUpdate.xdsSnapshot ?: previous.xdsSnapshot
+                            adsV2Snapshot = newUpdate.adsV2Snapshot ?: previous.adsV2Snapshot,
+                            adsV3Snapshot = newUpdate.adsV3Snapshot ?: previous.adsV3Snapshot,
+                            xdsV2Snapshot = newUpdate.xdsV2Snapshot ?: previous.xdsV2Snapshot,
+                            xdsV3Snapshot = newUpdate.xdsV3Snapshot ?: previous.xdsV3Snapshot
                     )
                 }
                 // concat map guarantees sequential processing (unlike flatMap)
@@ -71,7 +76,7 @@ class SnapshotUpdater(
                     // step 4: update the snapshot for either all groups (if services changed)
                     //         or specific groups (groups changed).
                     // TODO(dj): on what occasion can this be false?
-                    if (result.adsSnapshot != null || result.xdsSnapshot != null) {
+                    if (result.adsV2Snapshot != null || result.xdsV2Snapshot != null) {
                         // Stateful operation! This is the meat of this processing.
                         updateSnapshotForGroups(groups, result)
                     } else {
@@ -109,20 +114,26 @@ class SnapshotUpdater(
                 .name("snapshot-updater-services-published").metrics()
                 .createClusterConfigurations()
                 .map { (states, clusters) ->
-                    var lastXdsSnapshot: GlobalSnapshot? = null
-                    var lastAdsSnapshot: GlobalSnapshot? = null
+                    var lastXdsV2Snapshot: GlobalSnapshot? = null
+                    var lastAdsV2Snapshot: GlobalSnapshot? = null
+                    var lastXdsV3Snapshot: GlobalSnapshot? = null
+                    var lastAdsV3Snapshot: GlobalSnapshot? = null
 
                     if (properties.enabledCommunicationModes.xds) {
-                        lastXdsSnapshot = snapshotFactory.newSnapshot(states, clusters, XDS)
+                        lastXdsV2Snapshot = snapshotFactory.newSnapshot(states, clusters, XDS)
+                        lastXdsV3Snapshot = snapshotFactoryV3.newSnapshot(states, clusters, XDS)
                     }
                     if (properties.enabledCommunicationModes.ads) {
-                        lastAdsSnapshot = snapshotFactory.newSnapshot(states, clusters, ADS)
+                        lastAdsV2Snapshot = snapshotFactory.newSnapshot(states, clusters, ADS)
+                        lastAdsV3Snapshot = snapshotFactoryV3.newSnapshot(states, clusters, ADS)
                     }
 
                     val updateResult = UpdateResult(
                             action = Action.ALL_SERVICES_GROUP_ADDED,
-                            adsSnapshot = lastAdsSnapshot,
-                            xdsSnapshot = lastXdsSnapshot
+                            adsV2Snapshot = lastAdsV2Snapshot,
+                            adsV3Snapshot = lastAdsV3Snapshot,
+                            xdsV2Snapshot = lastXdsV2Snapshot,
+                            xdsV3Snapshot = lastXdsV3Snapshot
                     )
                     globalSnapshot = updateResult
                     updateResult
@@ -162,10 +173,10 @@ class SnapshotUpdater(
         versions.retainGroups(cache.groups())
         val results = Flux.fromIterable(groups)
             .doOnNextScheduledOn(groupSnapshotScheduler) { group ->
-                if (result.adsSnapshot != null && group.communicationMode == ADS) {
-                    updateSnapshotForGroup(group, result.adsSnapshot)
-                } else if (result.xdsSnapshot != null && group.communicationMode == XDS) {
-                    updateSnapshotForGroup(group, result.xdsSnapshot)
+                if (result.adsV2Snapshot != null && group.communicationMode == ADS) {
+                    updateSnapshotForGroup(group, result.adsV2Snapshot)
+                } else if (result.xdsV2Snapshot != null && group.communicationMode == XDS) {
+                    updateSnapshotForGroup(group, result.xdsV2Snapshot)
                 } else {
                     meterRegistry.counter("snapshot-updater.communication-mode.errors").increment()
                     logger.error("Requested snapshot for ${group.communicationMode.name} mode, but it is not here. " +
@@ -201,8 +212,10 @@ enum class Action {
 }
 
 class UpdateResult(
-    val action: Action,
-    val groups: List<Group> = listOf(),
-    val adsSnapshot: GlobalSnapshot? = null,
-    val xdsSnapshot: GlobalSnapshot? = null
+        val action: Action,
+        val groups: List<Group> = listOf(),
+        val adsV2Snapshot: GlobalSnapshot? = null,
+        val xdsV2Snapshot: GlobalSnapshot? = null,
+        val adsV3Snapshot: GlobalSnapshot? = null,
+        val xdsV3Snapshot: GlobalSnapshot? = null
 )
