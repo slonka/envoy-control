@@ -15,7 +15,9 @@ class MetadataNodeGroup(
 ) : NodeGroup<Group> {
     private val logger by logger()
 
-    override fun hash(node: Node): Group = createV2Group(node)
+    override fun hash(node: Node): Group {
+        return createV2Group(node)
+    }
 
     override fun hash(node: io.envoyproxy.envoy.config.core.v3.Node): Group {
         return createV3Group(node)

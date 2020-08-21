@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import pl.allegro.tech.servicemesh.envoycontrol.config.Ads
+import pl.allegro.tech.servicemesh.envoycontrol.config.AdsV3
 import pl.allegro.tech.servicemesh.envoycontrol.config.AdsWithNoDependencies
 import pl.allegro.tech.servicemesh.envoycontrol.config.AdsWithStaticListeners
 import pl.allegro.tech.servicemesh.envoycontrol.config.EnvoyControlTestConfiguration
@@ -38,6 +39,17 @@ internal class AdsEnvoyControlSmokeTest : EnvoyControlSmokeTest() {
         @BeforeAll
         fun adsSetup() {
             setup(envoyConfig = Ads)
+        }
+    }
+}
+
+internal class AdsV3EnvoyControlSmokeTest : EnvoyControlSmokeTest() {
+    companion object {
+
+        @JvmStatic
+        @BeforeAll
+        fun adsSetup() {
+            setup(envoyConfig = AdsV3)
         }
     }
 }

@@ -1,6 +1,7 @@
 package pl.allegro.tech.servicemesh.envoycontrol.groups
 
 import io.envoyproxy.controlplane.cache.ConfigWatcher
+import io.envoyproxy.controlplane.cache.NodeGroup
 import io.envoyproxy.controlplane.cache.Response
 import io.envoyproxy.controlplane.cache.Snapshot
 import io.envoyproxy.controlplane.cache.Watch
@@ -21,9 +22,10 @@ import java.util.function.Consumer
  * When Envoy doesn't receive any snapshot from Envoy Control, it is stuck in PRE_INITIALIZING state.
  */
 internal class GroupChangeWatcher(
-    private val cache: SimpleCache<Group, Snapshot>,
-    private val metrics: EnvoyControlMetrics,
-    private val meterRegistry: MeterRegistry
+        private val cache: SimpleCache<Group, Snapshot>,
+        private val metrics: EnvoyControlMetrics,
+        private val meterRegistry: MeterRegistry,
+        private val nodeGroup: NodeGroup<Group>
 ) : ConfigWatcher {
     private val groupsChanged: Flux<List<Group>> = Flux.create { groupChangeEmitter = it }
     private var groupChangeEmitter: FluxSink<List<Group>>? = null
@@ -48,6 +50,9 @@ internal class GroupChangeWatcher(
         hasClusterChanged: Boolean
     ): Watch? {
         val oldGroups = cache.groups()
+        // only here we know if we requested v2 or v3 resources
+        // request?.v3Request()?.getNode()
+
         val watch = cache.createWatch(ads, request, knownResourceNames, responseConsumer, hasClusterChanged)
         val groups = cache.groups()
         metrics.setCacheGroupsCount(groups.size)

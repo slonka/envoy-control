@@ -18,23 +18,33 @@ class CompositeDiscoveryServerCallbacks(
     private val logger by logger()
 
     override fun onStreamCloseWithError(streamId: Long, typeUrl: String?, error: Throwable?) {
-        runCallbacks { it.onStreamCloseWithError(streamId, typeUrl, error) }
+        runCallbacks {
+            it.onStreamCloseWithError(streamId, typeUrl, error)
+        }
     }
 
     override fun onStreamClose(streamId: Long, typeUrl: String?) {
-        runCallbacks { it.onStreamClose(streamId, typeUrl) }
+        runCallbacks {
+            it.onStreamClose(streamId, typeUrl)
+        }
     }
 
     override fun onStreamOpen(streamId: Long, typeUrl: String?) {
-        runCallbacks { it.onStreamOpen(streamId, typeUrl) }
+        runCallbacks {
+            it.onStreamOpen(streamId, typeUrl)
+        }
     }
 
     override fun onV2StreamRequest(streamId: Long, request: DiscoveryRequest?) {
-        runCallbacks { it.onV2StreamRequest(streamId, request) }
+        runCallbacks {
+            it.onV2StreamRequest(streamId, request)
+        }
     }
 
     override fun onV3StreamRequest(streamId: Long, request: v3DiscoveryRequest?) {
-        runCallbacks { it.onV3StreamRequest(streamId, request) }
+        runCallbacks {
+            it.onV3StreamRequest(streamId, request)
+        }
     }
 
     override fun onStreamResponse(
@@ -42,7 +52,9 @@ class CompositeDiscoveryServerCallbacks(
         request: DiscoveryRequest?,
         response: DiscoveryResponse?
     ) {
-        runCallbacks { it.onStreamResponse(streamId, request, response) }
+        runCallbacks {
+            it.onStreamResponse(streamId, request, response)
+        }
     }
 
     private fun runCallbacks(fn: (DiscoveryServerCallbacks) -> Unit) {

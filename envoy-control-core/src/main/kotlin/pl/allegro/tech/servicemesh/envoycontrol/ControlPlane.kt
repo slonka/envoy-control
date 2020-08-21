@@ -4,8 +4,10 @@ import io.envoyproxy.controlplane.cache.NodeGroup
 import io.envoyproxy.controlplane.cache.Snapshot
 import io.envoyproxy.controlplane.cache.SnapshotCache
 import io.envoyproxy.controlplane.server.DefaultExecutorGroup
+import io.envoyproxy.controlplane.server.DiscoveryServer
 import io.envoyproxy.controlplane.server.ExecutorGroup
 import io.envoyproxy.controlplane.server.V2DiscoveryServer
+import io.envoyproxy.controlplane.server.V3DiscoveryServer
 import io.envoyproxy.controlplane.server.callback.SnapshotCollectingCallback
 import io.grpc.Server
 import io.grpc.netty.NettyServerBuilder
@@ -167,9 +169,9 @@ class ControlPlane private constructor(
 
             val cleanupProperties = properties.server.snapshotCleanup
 
-            val groupChangeWatcher = GroupChangeWatcher(cache, metrics, meterRegistry)
+            val groupChangeWatcher = GroupChangeWatcher(cache, metrics, meterRegistry, nodeGroup)
 
-            val discoveryServer = V2DiscoveryServer(
+            val discoveryServer = V3DiscoveryServer(
                 listOf(
                     CompositeDiscoveryServerCallbacks(
                         meterRegistry,
@@ -291,7 +293,7 @@ class ControlPlane private constructor(
             return this
         }
 
-        private fun NettyServerBuilder.withEnvoyServices(discoveryServer: V2DiscoveryServer): NettyServerBuilder =
+        private fun NettyServerBuilder.withEnvoyServices(discoveryServer: V3DiscoveryServer): NettyServerBuilder =
             this.addService(discoveryServer.aggregatedDiscoveryServiceImpl)
                 .addService(discoveryServer.clusterDiscoveryServiceImpl)
                 .addService(discoveryServer.endpointDiscoveryServiceImpl)
@@ -305,7 +307,7 @@ class ControlPlane private constructor(
 
         private fun grpcServer(
             config: ServerProperties,
-            discoveryServer: V2DiscoveryServer,
+            discoveryServer: V3DiscoveryServer,
             nioEventLoopExecutor: Executor,
             grpcServerExecutor: Executor
         ): Server = NettyServerBuilder.forPort(config.port)

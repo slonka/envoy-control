@@ -7,6 +7,7 @@ import io.micrometer.core.instrument.Timer
 import pl.allegro.tech.servicemesh.envoycontrol.groups.CommunicationMode.ADS
 import pl.allegro.tech.servicemesh.envoycontrol.groups.CommunicationMode.XDS
 import pl.allegro.tech.servicemesh.envoycontrol.groups.Group
+import pl.allegro.tech.servicemesh.envoycontrol.groups.GroupVersion
 import pl.allegro.tech.servicemesh.envoycontrol.logger
 import pl.allegro.tech.servicemesh.envoycontrol.services.MultiClusterState
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.v2.EnvoySnapshotFactory
@@ -153,7 +154,11 @@ class SnapshotUpdater(
 
     private fun updateSnapshotForGroup(group: Group, globalSnapshot: GlobalSnapshot) {
         try {
-            val groupSnapshot = snapshotFactory.getSnapshotForGroup(group, globalSnapshot)
+            val groupSnapshot = if (group.version == GroupVersion.V2) {
+                snapshotFactory.getSnapshotForGroup(group, globalSnapshot)
+            } else {
+                snapshotFactoryV3.getSnapshotForGroup(group, globalSnapshot)
+            }
             snapshotTimer(group.serviceName).record {
                 cache.setSnapshot(group, groupSnapshot)
             }
@@ -173,10 +178,14 @@ class SnapshotUpdater(
         versions.retainGroups(cache.groups())
         val results = Flux.fromIterable(groups)
             .doOnNextScheduledOn(groupSnapshotScheduler) { group ->
-                if (result.adsV2Snapshot != null && group.communicationMode == ADS) {
+                if (group.version == GroupVersion.V2 && result.adsV2Snapshot != null && group.communicationMode == ADS) {
                     updateSnapshotForGroup(group, result.adsV2Snapshot)
-                } else if (result.xdsV2Snapshot != null && group.communicationMode == XDS) {
+                } else if (group.version == GroupVersion.V3 && result.adsV3Snapshot != null && group.communicationMode == ADS) {
+                    updateSnapshotForGroup(group, result.adsV3Snapshot)
+                } else if (group.version == GroupVersion.V2 && result.xdsV2Snapshot != null && group.communicationMode == XDS) {
                     updateSnapshotForGroup(group, result.xdsV2Snapshot)
+                } else if (group.version == GroupVersion.V3 && result.xdsV3Snapshot != null && group.communicationMode == XDS) {
+                    updateSnapshotForGroup(group, result.xdsV3Snapshot)
                 } else {
                     meterRegistry.counter("snapshot-updater.communication-mode.errors").increment()
                     logger.error("Requested snapshot for ${group.communicationMode.name} mode, but it is not here. " +
